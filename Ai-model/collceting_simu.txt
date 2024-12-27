@@ -1,0 +1,11 @@
+Enter label (1 for human, 0 for non-human): 1
+Enter the duration in minutes for data collection: 5
+Collecting data with label: 1 for 5 minutes...
+Logged data: 0.52, 0.78, 70, 18, Label: 1
+Logged data: 0.53, 0.80, 71, 19, Label: 1
+Logged data: 0.51, 0.79, 72, 18, Label: 1
+Logged data: 0.54, 0.82, 73, 20, Label: 1
+...
+Data collection for 5 minutes completed.
+Connection closed.
+Server closed.

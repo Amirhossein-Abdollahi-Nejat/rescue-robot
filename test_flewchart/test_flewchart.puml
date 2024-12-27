@@ -1,0 +1,97 @@
+@startuml
+start
+:Initialize TestNode;
+:Setup GPIO for Buzzer (Pin 18);
+:Initialize Tests Passed = True;
+:Subscribe to Topics;
+note right
+Subscribed Topics:
+1. Gas Concentration
+2. Vibration Detected
+3. Sound Level
+4. Temperature Data
+5. Humidity Data
+6. Heart Rate
+7. GPS Data
+8. IMU Data
+9. Camera Data
+10. Ultrasonic 1 Distance
+11. Ultrasonic 2 Distance
+end note
+
+:Initialize Sensor State Variables;
+note right
+Gas Level, Vibration Detected, Sound Level, 
+Temperature, Humidity, Heart Rate, GPS Data, 
+IMU Data, Camera Data, Ultrasonic Distances
+end note
+
+:Initialize Motor Test = False;
+:Initialize Connectivity Test = False;
+
+:Run Tests;
+
+partition "Motor Test" {
+    :Log "Testing Motors...";
+    if (Motor Responds Correctly?) then (Yes)
+        :Set Motor Test Passed = True;
+    else (No)
+        :Log "Motor Test Failed";
+        :Buzzer Beep (3 times);
+        :Set Tests Passed = False;
+    endif
+}
+
+partition "Connectivity Test" {
+    :Log "Testing Connectivity...";
+    :Ping Operator Machine (IP: 192.168.x.x);
+    if (Ping Successful?) then (Yes)
+        :Set Connectivity Test Passed = True;
+        :Log "Connectivity Successful!";
+    else (No)
+        :Log "Connectivity Test Failed";
+        :Buzzer Beep (3 times);
+        :Set Tests Passed = False;
+    endif
+}
+
+partition "Sensor Test" {
+    if (All Sensors Responding?) then (Yes)
+        :Test Individual Sensors;
+        note right
+        Sensor-specific logic:
+        1. Gas: 0 <= Value <= 1
+        2. Vibration: Detected = True
+        3. Sound: Value >= 0
+        4. Temperature: -50 <= Value <= 150
+        5. Humidity: 0 <= Value <= 100
+        6. Heart Rate: 30 <= Value <= 200
+        7. GPS Latitude: -90 <= Value <= 90
+        8. IMU Acceleration: -10 <= X, Y, Z <= 10
+        9. Camera: Image Data Length > 0
+        10. Ultrasonic: 0 <= Distance <= 400 cm
+        end note
+    else (No)
+        :Log "Sensor Test Failed";
+        :Buzzer Beep (3 times);
+        :Set Tests Passed = False;
+    endif
+}
+
+if (Tests Passed AND Motor Test Passed AND Connectivity Test Passed?) then (Yes)
+    :Log "All Tests Passed. System Ready.";
+    :Buzzer Beep (1 time);
+    :Wait for System Start (5 seconds);
+    stop
+else (No)
+    :Log "Some Tests Failed. System Cannot Start.";
+    :Prompt Operator;
+    if (Operator Chooses to Continue?) then (Yes)
+        :Proceed with Warnings;
+        stop
+    else (No)
+        :Log "Operator Aborted. Shutting Down.";
+        stop
+    endif
+endif
+@enduml
