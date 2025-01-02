@@ -1,0 +1,83 @@
+@startuml
+!define RECTANGLE class
+
+' Define the layers of the neural network
+
+RECTANGLE InputLayer {
+  +Distance (Feature)
+  +Motion Intensity (Feature)
+  +Heart Rate (Feature)
+  +Breathing Rate (Feature)
+}
+
+RECTANGLE HiddenLayer1 {
+  +128 Neurons (ReLU)
+}
+
+RECTANGLE BatchNorm1 {
+  +Normalization Layer
+}
+
+RECTANGLE Dropout1 {
+  +Dropout (0.2)
+}
+
+RECTANGLE HiddenLayer2 {
+  +64 Neurons (ReLU)
+}
+
+RECTANGLE BatchNorm2 {
+  +Normalization Layer
+}
+
+RECTANGLE Dropout2 {
+  +Dropout (0.2)
+}
+
+RECTANGLE HiddenLayer3 {
+  +32 Neurons (ReLU)
+}
+
+RECTANGLE OutputLayer {
+  +1 Neuron (Sigmoid)
+}
+
+' Connect the layers
+InputLayer -down-> HiddenLayer1 : "Input (4 features)"
+HiddenLayer1 -down-> BatchNorm1 : "Normalization"
+BatchNorm1 -down-> Dropout1 : "Dropout (0.2)"
+Dropout1 -down-> HiddenLayer2 : "64 Neurons"
+HiddenLayer2 -down-> BatchNorm2 : "Normalization"
+BatchNorm2 -down-> Dropout2 : "Dropout (0.2)"
+Dropout2 -down-> HiddenLayer3 : "32 Neurons"
+HiddenLayer3 -down-> OutputLayer : "Output Layer (Sigmoid)"
+
+' Add the overall structure and notes
+note right of InputLayer
+  Input features: 
+  Distance, Motion Intensity,
+  Heart Rate, Breathing Rate
+end note
+
+note right of OutputLayer
+  Output: 
+  1 (Human = 1, Animal = 0)
+end note
+
+note bottom of BatchNorm1
+  Batch normalization to normalize the activations.
+end note
+
+note bottom of Dropout1
+  Dropout layer (0.2) to avoid overfitting.
+end note
+
+note bottom of BatchNorm2
+  Batch normalization to normalize the activations.
+end note
+
+note bottom of Dropout2
+  Dropout layer (0.2) to avoid overfitting.
+end note
+
+@enduml

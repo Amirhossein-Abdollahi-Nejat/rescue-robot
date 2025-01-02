@@ -1,0 +1,25 @@
+@startuml
+start
+
+' ROS 2 Node Initialization
+:Initialize ROS 2 Node;
+
+' Timer to simulate sensor data every 2 seconds
+:Create Timer to Simulate Data Every 2 Seconds;
+
+' Simulate Sensor Data (Human/Animal)
+:Simulate Sensor Data (Heart Rate, Breathing Rate, Distance, Motion Intensity);
+
+' Use the trained model for prediction
+:Use Model to Predict Class (Human/Animal);
+
+' Publish classification result
+:Publish Classification Result (Human/Animal with Confidence);
+
+' Publish sensor data (normalized)
+:Publish Normalized Sensor Data;
+
+' End point
+stop
+
+@enduml

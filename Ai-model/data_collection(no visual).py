@@ -10,12 +10,40 @@ BAUD_RATE = 115200
 FILE_NAME = "sensor_data.csv"
 FIELDS = ["Timestamp", "Distance", "Motion Intensity", "Heart Rate", "Breathing Rate", "Label"]
 
-# Function to collect data from the sensor for a specified duration (in minutes)
-def collect_and_log_data(label, duration_minutes):
+# Function to initialize the serial connection
+def initialize_serial_connection():
     try:
         ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
-        print(f"Collecting data with label: {label} for {duration_minutes} minutes...")
+        return ser
+    except Exception as e:
+        print(f"Error setting up serial connection: {e}")
+        return None
 
+# Function to write data to CSV
+def write_to_csv(file, data):
+    try:
+        writer = csv.writer(file)
+        writer.writerow(data)
+    except Exception as e:
+        print(f"Error writing to CSV: {e}")
+
+# Function to process a single sensor data line
+def process_data_line(data_line, label):
+    values = data_line.split(",")  # Adjust parsing based on your sensor's data format
+    if len(values) >= 4:
+        timestamp = time.time()
+        distance, motion, heart_rate, breathing_rate = map(float, values[:4])
+        return [timestamp, distance, motion, heart_rate, breathing_rate, label]
+    return None
+
+# Function to collect data from the sensor and log it
+def collect_and_log_data(label, num_samples):
+    print(f"Collecting {num_samples} samples with label: {label}...")
+    ser = initialize_serial_connection()
+    if not ser:
+        return
+
+    try:
         # Open the CSV file in append mode
         with open(FILE_NAME, mode="a", newline="") as file:
             writer = csv.writer(file)
@@ -24,24 +52,22 @@ def collect_and_log_data(label, duration_minutes):
             if file.tell() == 0:
                 writer.writerow(FIELDS)
 
-            start_time = time.time()
-            end_time = start_time + (duration_minutes * 60)  # Convert minutes to seconds
-
-            while time.time() < end_time:
+            sample_count = 0
+            while sample_count < num_samples:
                 try:
-                    # Read and parse the sensor data from the serial port
+                    # Read and process the sensor data from the serial port
                     data_line = ser.readline().decode("utf-8").strip()
-                    values = data_line.split(",")  # Adjust parsing based on your sensor's data format
-                    if len(values) >= 4:
-                        timestamp = time.time()
-                        distance = float(values[0])
-                        motion = float(values[1])
-                        heart_rate = float(values[2])
-                        breathing_rate = float(values[3])
+                    processed_data = process_data_line(data_line, label)
+                    
+                    if processed_data:
+                        # Write the processed data to the CSV file
+                        write_to_csv(file, processed_data)
+                        print(f"Logged data: {processed_data[1]}, {processed_data[2]}, {processed_data[3]}, {processed_data[4]}, Label: {label}")
 
-                        # Write the data to the CSV file
-                        writer.writerow([timestamp, distance, motion, heart_rate, breathing_rate, label])
-                        print(f"Logged data: {distance}, {motion}, {heart_rate}, {breathing_rate}, Label: {label}")
+                        sample_count += 1
+                        print(f"Sample {sample_count}/{num_samples} collected.")
+                    else:
+                        print("Invalid data received.")
 
                 except KeyboardInterrupt:
                     print("Data collection stopped.")
@@ -50,35 +76,36 @@ def collect_and_log_data(label, duration_minutes):
                     print(f"Error during data collection: {e}")
                     continue
 
-            print(f"Data collection for {duration_minutes} minutes completed.")
+            print(f"Data collection for {num_samples} samples completed.")
 
     except Exception as e:
-        print(f"Error setting up serial connection: {e}")
+        print(f"Error during data collection: {e}")
+    finally:
+        ser.close()  # Ensure the serial connection is closed when done
 
 # Example usage
-label = input("Enter label (1 for human, 0 for non-human): ")
-duration_minutes = int(input("Enter the duration in minutes for data collection: "))
-collect_and_log_data(label, duration_minutes)
+def main():
+    label = input("Enter label (1 for human, 0 for non-human): ")
+    num_samples = int(input("Enter the number of samples for data collection: "))
+    collect_and_log_data(label, num_samples)
+    print("Data collection process completed.")
 
-print("Data collection process completed.")
+if __name__ == "__main__":
+    main()
 
-
-###########################################################
-# OUTPUT SIMULATION FOR Ai-model/data_collection.py
-
-
-#   Enter label (1 for human, 0 for non-human): 1
-#   Enter the duration in minutes for data collection: 5
-#
-#   Collecting data with label: 1 for 5 minutes...
-#
-#   Logged data: 0.52, 0.78, 70, 18, Label: 1
-#   Logged data: 0.53, 0.80, 71, 19, Label: 1
-#   Logged data: 0.51, 0.79, 72, 18, Label: 1
-#   Logged data: 0.54, 0.82, 73, 20, Label: 1
-#   ...
-#   Data collection for 5 minutes completed.
-#   Data collection process completed.
-
-###########################################################
-
+# Sample Console Output (This part is commented out for reference)
+# -------------------------------------------------------------
+# Enter label (1 for human, 0 for non-human): 1
+# Enter the number of samples for data collection: 5
+# Collecting 5 samples with label: 1...
+# Logged data: 2.34, 0.75, 68.0, 15.0, Label: 1
+# Sample 1/5 collected.
+# Logged data: 2.29, 0.80, 69.0, 16.0, Label: 1
+# Sample 2/5 collected.
+# Logged data: 2.30, 0.78, 70.0, 14.5, Label: 1
+# Sample 3/5 collected.
+# Logged data: 2.32, 0.82, 68.5, 15.5, Label: 1
+# Sample 4/5 collected.
+# Logged data: 2.33, 0.77, 69.5, 15.0, Label: 1
+# Sample 5/5 collected.
+# Data collection for 5 samples completed.
